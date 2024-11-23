@@ -22,7 +22,7 @@ class RulesViewProvider implements vscode.WebviewViewProvider {
             localResourceRoots: [this.extensionUri],
         };
 
-        const htmlPath = vscode.Uri.joinPath(this.extensionUri, "src", "rulesView.html");
+        const htmlPath = vscode.Uri.joinPath(this.extensionUri, "resources", "rulesView.html");
         const htmlContent = fs.readFileSync(htmlPath.fsPath, "utf-8");
 
         const styleVSCodeUri = webviewView.webview.asWebviewUri(

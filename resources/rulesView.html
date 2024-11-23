@@ -11,10 +11,17 @@
             body {
                 font-family: Arial, sans-serif;
             }
+            .actions-container {
+                display: flex;
+                flex-direction: row;
+                gap: 4px;
+                align-items: center;
+                margin-bottom: 12px;
+            }
             .rules-container {
                 display: flex;
                 flex-direction: column;
-                gap: 20px;
+                gap: 24px;
                 position: relative;
             }
             .first-add-btn-container {
@@ -27,7 +34,7 @@
             .rule {
                 display: flex;
                 flex-direction: row;
-                gap: 10px;
+                gap: 4px;
                 align-items: center;
             }
             .remove-btn {
@@ -39,19 +46,19 @@
             }
             .add-btn-container {
                 width: 100%;
-                height: 20px;
+                height: 24px;
                 display: flex;
                 justify-content: center;
                 position: absolute;
                 z-index: 69;
                 top: 100%;
                 left: 0;
-                transform: translateY(-50%) translateY(10px);
+                transform: translateY(-50%) translateY(12px);
             }
             .add-btn {
-                height: 20px;
-                width: 20px;
-                opacity: 0;
+                height: 24px;
+                width: 24px;
+                opacity: 0.1;
                 transition: opacity 0.3s ease;
                 line-height: 0;
                 padding: 0;
@@ -66,7 +73,10 @@
         </style>
     </head>
     <body>
-        <button onclick="applyRules()">Apply</button>
+        <div class="actions-container">
+            <button class="action-btn secondary" onclick="applyRules()">Preview</button>
+            <button class="action-btn" onclick="applyRules()">Apply</button>
+        </div>
         <div id="rules-container" class="rules-container">
             <div id="first-add-btn" class="first-add-btn-container">
                 <div class="add-btn-container">
@@ -86,6 +96,8 @@
         </div>
 
         <script>
+            const vscode = acquireVsCodeApi();
+
             let rules = [];
 
             const rulesContainer = document.getElementById("rules-container");
@@ -140,7 +152,7 @@
             }
 
             function applyRules() {
-                console.log(JSON.stringify(rules));
+                vscode.sendMe
             }
         </script>
     </body>
