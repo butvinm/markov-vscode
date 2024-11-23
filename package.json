@@ -1,0 +1,67 @@
+{
+    "name": "markov",
+    "displayName": "markov",
+    "description": "Modify text with the Refal-like experience",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.93.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "markov.openEditor",
+                "title": "Open Markov Editor"
+            }
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "markov-editor",
+                    "title": "Markov Editor",
+                    "icon": "resources/circle-m.svg"
+                }
+            ]
+        },
+        "views": {
+            "markov-editor": [
+                {
+                    "type": "webview",
+                    "id": "markov-editor.rules",
+                    "name": "Rules"
+                }
+            ]
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "yarn run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "yarn run compile && yarn run lint",
+        "lint": "eslint src",
+        "test": "vscode-test"
+    },
+    "devDependencies": {
+        "@types/mocha": "^10.0.9",
+        "@types/node": "20.x",
+        "@types/vscode": "^1.93.0",
+        "@typescript-eslint/eslint-plugin": "^8.10.0",
+        "@typescript-eslint/parser": "^8.7.0",
+        "@vscode/test-cli": "^0.0.10",
+        "@vscode/test-electron": "^2.4.1",
+        "eslint": "^9.13.0",
+        "prettier": "^3.3.3",
+        "typescript": "^5.6.3"
+    },
+    "prettier": {
+        "tabWidth": 4,
+        "printWidth": 140
+    },
+    "dependencies": {
+        "@vscode/codicons": "^0.0.36"
+    }
+}
