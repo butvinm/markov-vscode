@@ -22,17 +22,9 @@ interface Rule {
     sub: string;
 }
 
-class IterationsLimitExceed extends Error {
-    constructor(msg: string) {
-        super(msg);
-        Object.setPrototypeOf(this, IterationsLimitExceed.prototype);
-    }
-}
 
 class RulesViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = "markov-editor.rules";
-
-    private static readonly MAX_ITERATIONS = 69420;
 
     private previews: Map<vscode.TextDocument, vscode.TextDocument> = new Map();
 
@@ -118,15 +110,7 @@ class RulesViewProvider implements vscode.WebviewViewProvider {
     }
 
     private apply(editor: vscode.TextEditor, rules: Rule[]) {
-        let modifiedText: string;
-        try {
-            modifiedText = this.modifyText(editor.document.getText(), rules);
-        } catch (err) {
-            if (err instanceof IterationsLimitExceed) {
-                vscode.window.showErrorMessage(err.message);
-            }
-        }
-
+        const modifiedText = this.modifyText(editor.document.getText(), rules);
         editor
             .edit((editBuilder) => {
                 const entireRange = new vscode.Range(
