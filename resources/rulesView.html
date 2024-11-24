@@ -74,21 +74,11 @@
     </head>
     <body>
         <div class="actions-container">
-            <button class="action-btn secondary" onclick="applyRules()">Preview</button>
+            <button class="action-btn secondary" onclick="previewRules()">Preview</button>
             <button class="action-btn" onclick="applyRules()">Apply</button>
         </div>
         <div id="rules-container" class="rules-container">
             <div id="first-add-btn" class="first-add-btn-container">
-                <div class="add-btn-container">
-                    <button class="add-btn" onclick="addRule()"><i class="codicon codicon-add"></i></button>
-                </div>
-            </div>
-            <div class="rule-container">
-                <div class="rule">
-                    <input type="text" placeholder="Pattern" class="pattern" oninput="updateRuleData()" />
-                    <input type="text" placeholder="Substitute" class="sub" oninput="updateRuleData()" />
-                    <button class="remove-btn" onclick="removeRule()"><i class="codicon codicon-close"></i></button>
-                </div>
                 <div class="add-btn-container">
                     <button class="add-btn" onclick="addRule()"><i class="codicon codicon-add"></i></button>
                 </div>
@@ -98,10 +88,26 @@
         <script>
             const vscode = acquireVsCodeApi();
 
-            let rules = [];
-
             const rulesContainer = document.getElementById("rules-container");
             const firstAddButton = document.getElementById("first-add-btn");
+
+            let rules = [
+                { pattern: "0/0", sub: "0" },
+                { pattern: "1/0", sub: "1" },
+                { pattern: "0/1", sub: "1" },
+                { pattern: "1/1", sub: "2" },
+                { pattern: "1/2", sub: "3" },
+                { pattern: "2/1", sub: "3" },
+            ];
+            rules.forEach((rule, index) => {
+                const newRule = createRule();
+                const patternInput = newRule.querySelector(".pattern");
+                const subInput = newRule.querySelector(".sub");
+                patternInput.value = rule.pattern;
+                subInput.value = rule.sub;
+
+                rulesContainer.appendChild(newRule);
+            });
 
             function addRule() {
                 const newRule = createRule();
@@ -109,7 +115,7 @@
                 rulesContainer.insertBefore(newRule, referenceNode);
 
                 const index = getRuleIndex(newRule);
-                rules.splice(index, 0, { pattern: "", substitute: "" });
+                rules.splice(index, 0, { pattern: "", sub: "" });
             }
 
             function removeRule() {
@@ -125,7 +131,7 @@
                 ruleContainer.innerHTML = `
                 <div class="rule">
                     <input type="text" placeholder="Pattern" class="pattern" oninput="updateRuleData()" />
-                    <input type="text" placeholder="Substitute" class="sub" oninput="updateRuleData()" />
+                    <input type="text" placeholder="Substitution" class="sub" oninput="updateRuleData()" />
                     <button class="remove-btn" onclick="removeRule()"><i class="codicon codicon-close"></i></button>
                 </div>
                 <div class="add-btn-container">
@@ -152,7 +158,13 @@
             }
 
             function applyRules() {
-                vscode.sendMe
+                console.log('vscode.postMessage({ action: "apply", rules: rules });');
+
+                vscode.postMessage({ action: "apply", rules: rules });
+            }
+
+            function previewRules() {
+                vscode.postMessage({ action: "preview", rules: rules });
             }
         </script>
     </body>
