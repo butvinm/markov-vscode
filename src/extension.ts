@@ -22,13 +22,16 @@ interface Rule {
     sub: string;
 }
 
-
 class RulesViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = "markov-editor.rules";
 
     private previews: Map<vscode.TextDocument, vscode.TextDocument> = new Map();
 
-    constructor(private readonly extensionUri: vscode.Uri) {}
+    constructor(private readonly extensionUri: vscode.Uri) {
+        vscode.workspace.onDidCloseTextDocument((doc) => {
+            this.previews.delete(doc);
+        });
+    }
 
     public resolveWebviewView(webviewView: vscode.WebviewView, context: vscode.WebviewViewResolveContext, token: vscode.CancellationToken) {
         webviewView.webview.options = {
@@ -53,16 +56,20 @@ class RulesViewProvider implements vscode.WebviewViewProvider {
     }
 
     private handleViewMessage(message: Message) {
-        const editor = this.selectEditor();
-        if (!editor) {
+        const target = this.selectEditor();
+        if (!target) {
             vscode.window.showErrorMessage("No active editor found.");
             return;
         }
+        const { editor, preview } = target;
 
         const rules = message.rules.map(this.buildRule);
         switch (message.action) {
             case "apply":
                 this.apply(editor, rules);
+                if (preview) {
+                    this.closePreview(preview);
+                }
                 break;
             case "preview":
                 this.preview(editor, rules);
@@ -77,7 +84,7 @@ class RulesViewProvider implements vscode.WebviewViewProvider {
      * Original editor in this case is considered "closed" and cannot be edited.
      * So we should find an active editor by corresponding document.
      */
-    private selectEditor(): vscode.TextEditor | null {
+    private selectEditor(): { editor: vscode.TextEditor; preview?: vscode.TextEditor } | null {
         const activeEditor = vscode.window.activeTextEditor;
         if (!activeEditor) {
             return null;
@@ -87,11 +94,18 @@ class RulesViewProvider implements vscode.WebviewViewProvider {
         if (previewedDocument) {
             const previewedEditor = vscode.window.visibleTextEditors.find((editor) => editor.document == previewedDocument);
             if (previewedEditor) {
-                return previewedEditor;
+                return { editor: previewedEditor, preview: activeEditor };
             }
             return null;
         }
-        return activeEditor;
+        return { editor: activeEditor };
+    }
+
+    private closePreview(preview: vscode.TextEditor) {
+        vscode.workspace
+            .openTextDocument(preview.document.uri)
+            .then(() => vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor"))
+            .then(() => this.previews.delete(preview.document));
     }
 
     private buildRule(ruleData: RuleData): Rule {
@@ -103,10 +117,43 @@ class RulesViewProvider implements vscode.WebviewViewProvider {
 
     private preview(editor: vscode.TextEditor, rules: Rule[]) {
         const modifiedText = this.modifyText(editor.document.getText(), rules);
-        vscode.workspace.openTextDocument({ content: modifiedText, language: editor.document.languageId }).then((preview) => {
-            this.previews.set(preview, editor.document);
-            vscode.commands.executeCommand("vscode.diff", editor.document.uri, preview.uri, `Markov Preview: ${editor.document.fileName}`);
-        });
+
+        const previewedEditor = Array.from(this.previews.entries()).find(
+            ([previewDocument, editorDocument]) => editorDocument == editor.document,
+        );
+        const preview = previewedEditor ? vscode.window.visibleTextEditors.find((editor) => editor.document == previewedEditor[0]) : null;
+
+        if (preview) {
+            // if preview is already opened, just update its content
+            preview.edit((editBuilder) => {
+                const entireRange = new vscode.Range(
+                    editor.document.positionAt(0),
+                    editor.document.positionAt(editor.document.getText().length),
+                );
+                editBuilder.replace(entireRange, modifiedText);
+            });
+
+            vscode.workspace.openTextDocument(preview.document.uri).then((preview) => {
+                this.previews.set(preview, editor.document);
+                vscode.commands.executeCommand(
+                    "vscode.diff",
+                    editor.document.uri,
+                    preview.uri,
+                    `Markov Preview: ${editor.document.fileName}`,
+                );
+            });
+        } else {
+            // open a new preview tab with diff between original and modified text
+            vscode.workspace.openTextDocument({ content: modifiedText, language: editor.document.languageId }).then((preview) => {
+                this.previews.set(preview, editor.document);
+                vscode.commands.executeCommand(
+                    "vscode.diff",
+                    editor.document.uri,
+                    preview.uri,
+                    `Markov Preview: ${editor.document.fileName}`,
+                );
+            });
+        }
     }
 
     private apply(editor: vscode.TextEditor, rules: Rule[]) {
