@@ -22,8 +22,17 @@ interface Rule {
     sub: string;
 }
 
+class IterationsLimitExceed extends Error {
+    constructor(msg: string) {
+        super(msg);
+        Object.setPrototypeOf(this, IterationsLimitExceed.prototype);
+    }
+}
+
 class RulesViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = "markov-editor.rules";
+
+    private static readonly MAX_ITERATIONS = 69420;
 
     private previews: Map<vscode.TextDocument, vscode.TextDocument> = new Map();
 
@@ -101,8 +110,6 @@ class RulesViewProvider implements vscode.WebviewViewProvider {
     }
 
     private preview(editor: vscode.TextEditor, rules: Rule[]) {
-        console.log("Preview: ", editor.document.uri.path);
-
         const modifiedText = this.modifyText(editor.document.getText(), rules);
         vscode.workspace.openTextDocument({ content: modifiedText, language: editor.document.languageId }).then((preview) => {
             this.previews.set(preview, editor.document);
@@ -111,9 +118,15 @@ class RulesViewProvider implements vscode.WebviewViewProvider {
     }
 
     private apply(editor: vscode.TextEditor, rules: Rule[]) {
-        console.log("Apply: ", editor.document.uri.path);
+        let modifiedText: string;
+        try {
+            modifiedText = this.modifyText(editor.document.getText(), rules);
+        } catch (err) {
+            if (err instanceof IterationsLimitExceed) {
+                vscode.window.showErrorMessage(err.message);
+            }
+        }
 
-        let modifiedText = this.modifyText(editor.document.getText(), rules);
         editor
             .edit((editBuilder) => {
                 const entireRange = new vscode.Range(
@@ -134,18 +147,25 @@ class RulesViewProvider implements vscode.WebviewViewProvider {
     private modifyText(text: string, rules: Rule[]): string {
         let modifiedText = text;
 
-        let matched = false;
-        do {
-            matched = false;
-            for (const rule of rules) {
-                if (rule.pattern.test(modifiedText)) {
-                    modifiedText = modifiedText.replaceAll(rule.pattern, rule.sub);
-                    matched = true;
-                    break;
-                }
-            }
-        } while (matched);
+        for (const rule of rules) {
+            let text = "";
+            let cursor = 0;
 
+            const matches = modifiedText.matchAll(rule.pattern);
+            for (const match of matches) {
+                text += modifiedText.slice(cursor, match.index);
+
+                let sub = rule.sub;
+                match.forEach((group, index) => {
+                    sub = sub.replaceAll("$" + index.toString(), group);
+                });
+
+                text += sub;
+                cursor = match.index + match[0].length;
+            }
+            text += modifiedText.slice(cursor);
+            modifiedText = text;
+        }
         return modifiedText;
     }
 }
