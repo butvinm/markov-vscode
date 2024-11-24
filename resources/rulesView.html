@@ -58,17 +58,16 @@
             .add-btn {
                 height: 24px;
                 width: 24px;
-                opacity: 0.1;
-                transition: opacity 0.3s ease;
+                transition: color 0.3s ease;
                 line-height: 0;
                 padding: 0;
                 border-radius: 50%;
                 background: none;
-                outline: none;
+                color: #ffffff22;
             }
             .add-btn-container:hover .add-btn {
-                opacity: 1;
                 background: none;
+                color: #ffffffff;
             }
         </style>
     </head>
@@ -111,8 +110,18 @@
 
             function addRule() {
                 const newRule = createRule();
-                const referenceNode = event.target.closest(".rule-container")?.nextSibling || firstAddButton.nextSibling;
-                rulesContainer.insertBefore(newRule, referenceNode);
+
+                const ruleContainer = event.target.closest(".rule-container");
+                if (!ruleContainer) {
+                    // first add button clicked
+                    rulesContainer.insertBefore(newRule, firstAddButton.nextSibling);
+                } else if (!ruleContainer.nextSibling) {
+                    // last add button clicked
+                    rulesContainer.appendChild(newRule);
+                } else {
+                    // add button between two rules clicked
+                    rulesContainer.insertBefore(newRule, ruleContainer.nextSibling);
+                }
 
                 const index = getRuleIndex(newRule);
                 rules.splice(index, 0, { pattern: "", sub: "" });
