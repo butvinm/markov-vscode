@@ -6,6 +6,7 @@
         "url": "https://github.com/butvinm/markov-vscode"
     },
     "publisher": "butvinm",
+    "icon": "resources/icon.png",
     "version": "0.0.2",
     "engines": {
         "vscode": "^1.93.0"
