@@ -2,7 +2,11 @@
     "name": "markov",
     "displayName": "markov",
     "description": "Modify text with the Refal-like experience",
-    "version": "0.0.1",
+    "repository": {
+        "url": "https://github.com/butvinm/markov-vscode"
+    },
+    "publisher": "butvinm",
+    "version": "0.0.2",
     "engines": {
         "vscode": "^1.93.0"
     },
