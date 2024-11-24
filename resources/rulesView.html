@@ -91,12 +91,7 @@
             const firstAddButton = document.getElementById("first-add-btn");
 
             let rules = [
-                { pattern: "0/0", sub: "0" },
-                { pattern: "1/0", sub: "1" },
-                { pattern: "0/1", sub: "1" },
-                { pattern: "1/1", sub: "2" },
-                { pattern: "1/2", sub: "3" },
-                { pattern: "2/1", sub: "3" },
+                { pattern: "", sub: "" },
             ];
             rules.forEach((rule, index) => {
                 const newRule = createRule();
